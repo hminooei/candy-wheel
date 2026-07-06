@@ -328,6 +328,8 @@ function spinWheel() {
     // Randomize duration slightly to ensure random stopping position
     const spinDuration = selectedDuration + Math.random() * 2000;
     
+    console.log(`Spin initiated: selected duration = ${selectedDuration}ms, total animated duration = ${spinDuration.toFixed(0)}ms`);
+    
     const startTimestamp = performance.now();
     const sectorSize = (2 * Math.PI) / remaining.length;
     
