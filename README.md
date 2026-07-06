@@ -34,3 +34,8 @@ To run the application locally:
     ```
 
 3.  Open your browser and navigate to **`http://localhost:3000`**.
+
+## 📄 License
+
+Distributed under the MIT License. See [LICENSE](LICENSE) for more information.
+
