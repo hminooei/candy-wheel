@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Candy Wheel - Daily Sweet Selection</title>
+    <meta name="description" content="Spin the wheel to choose your daily candy and track your sweet treats.">
+    <!-- Google Fonts for premium typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="background-decorations">
+        <div class="glow-orb orb-1"></div>
+        <div class="glow-orb orb-2"></div>
+        <div class="glow-orb orb-3"></div>
+    </div>
+
+    <main class="app-container">
+        <header class="app-header">
+            <div class="logo-wrapper">
+                <span class="logo-icon">🍭</span>
+                <h1>Candy <span class="gradient-text">Wheel</span></h1>
+            </div>
+            <p class="subtitle">Spin the wheel to pick your daily treat! Eaten candies are removed until refilled.</p>
+        </header>
+
+        <div class="dashboard-grid">
+            <!-- Wheel Section -->
+            <section class="wheel-section card" aria-labelledby="wheel-heading">
+                <h2 id="wheel-heading" class="sr-only">Spinning Wheel</h2>
+                <div class="wheel-outer-container">
+                    <div class="wheel-pointer">▼</div>
+                    <div class="wheel-canvas-wrapper">
+                        <canvas id="wheel-canvas" width="500" height="500"></canvas>
+                        <button id="spin-btn" class="spin-center-button">SPIN</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Status & List Section -->
+            <section class="status-section" aria-labelledby="status-heading">
+                <h2 id="status-heading" class="sr-only">Candy Status</h2>
+
+                <!-- Daily Candy Alert Card -->
+                <div id="daily-candy-card" class="card highlight-card hidden">
+                    <div class="card-glow-border"></div>
+                    <div class="daily-badge">TODAY'S TREAT</div>
+                    <h3 id="selected-candy-name">Haribo Wild Berry</h3>
+                    <p class="daily-prompt">Have you eaten this candy today?</p>
+                    <button id="ack-btn" class="btn btn-primary btn-glow">
+                        <span class="btn-icon">😋</span> Yes, I Ate It!
+                    </button>
+                </div>
+
+                <!-- Empty State/Spin Prompt -->
+                <div id="spin-prompt-card" class="card info-card">
+                    <div class="info-icon">🎯</div>
+                    <h3>Ready to choose?</h3>
+                    <p>Click the <strong>SPIN</strong> button on the wheel to select today's candy.</p>
+                </div>
+
+                <!-- All Gone State Card -->
+                <div id="all-gone-card" class="card warning-card hidden">
+                    <div class="warning-icon">🎉</div>
+                    <h3>All Candies Eaten!</h3>
+                    <p>You have finished all candies on your wheel. Time to refill and start another round!</p>
+                    <button id="refill-btn" class="btn btn-secondary">
+                        <span class="btn-icon">🔄</span> Refill Wheel
+                    </button>
+                </div>
+
+                <!-- Candy Inventory -->
+                <div class="card inventory-card">
+                    <form id="add-candy-form" class="add-candy-form">
+                        <input type="text" id="new-candy-name" placeholder="Add new candy..." required maxlength="25" aria-label="New candy name" />
+                        <button type="submit" class="btn-add-submit" title="Add candy">+</button>
+                    </form>
+
+                    <div class="tabs">
+                        <button id="tab-remaining" class="tab-btn active" onclick="switchTab('remaining')">
+                            On Wheel (<span id="count-remaining">0</span>)
+                        </button>
+                        <button id="tab-eaten" class="tab-btn" onclick="switchTab('eaten')">
+                            Eaten (<span id="count-eaten">0</span>)
+                        </button>
+                    </div>
+
+                    <div class="tab-content">
+                        <div id="list-remaining" class="candy-list-container">
+                            <!-- Populated by JS -->
+                        </div>
+                        <div id="list-eaten" class="candy-list-container hidden">
+                            <!-- Populated by JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <!-- Canvas for Confetti -->
+    <canvas id="confetti-canvas"></canvas>
+
+    <footer class="app-footer">
+        <p>Candy Wheel &copy; 2026. Made with sweet vibes.</p>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>
