@@ -197,12 +197,13 @@ body {
     box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
 }
 
-/* Canvas & Wheel Section */
 .wheel-section {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
-    min-height: 520px;
+    min-height: 560px;
+    gap: 1.5rem;
 }
 
 .wheel-outer-container {
@@ -679,4 +680,39 @@ body {
     to {
         opacity: 1;
     }
+}
+
+/* Spin Duration Selector styling */
+.duration-selector-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--border-color);
+    padding: 0.45rem 1rem;
+    border-radius: 12px;
+    margin-top: -0.25rem;
+}
+
+.duration-selector-wrapper label {
+    font-family: var(--font-heading);
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.duration-selector-wrapper select {
+    background: transparent;
+    border: none;
+    color: white;
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    outline: none;
+}
+
+.duration-selector-wrapper select option {
+    background: var(--bg-dark);
+    color: white;
 }

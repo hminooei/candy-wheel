@@ -317,30 +317,49 @@ function spinWheel() {
     isSpinning = true;
     spinBtn.disabled = true;
     
+    const durationSelect = document.getElementById('spin-duration-select');
+    if (durationSelect) durationSelect.disabled = true;
+    
     // Hide panels
     dailyCandyCard.classList.add('hidden');
     spinPromptCard.classList.remove('hidden');
     
-    const spinDuration = 4500; // 4.5 seconds
+    const selectedDuration = parseInt(durationSelect?.value || '4500', 10);
+    // Randomize duration slightly to ensure random stopping position
+    const spinDuration = selectedDuration + Math.random() * 2000;
+    
     const startTimestamp = performance.now();
     const sectorSize = (2 * Math.PI) / remaining.length;
     
-    // Random spin parameters
-    const randomRotations = 6 + Math.floor(Math.random() * 4); // 6 to 9 full spins
-    const targetOffset = Math.random() * (2 * Math.PI);
     const initialAngle = currentAngle;
-    const finalAngle = initialAngle + (randomRotations * 2 * Math.PI) + targetOffset;
+    
+    // Phase parameters
+    const decelDuration = Math.min(4500, spinDuration);
+    const constDuration = spinDuration - decelDuration;
+    
+    // Constant speed of ~1.75 rotations per second
+    const speed = 0.0035 * Math.PI; 
+    
+    // Deceleration distance based on continuous derivatives
+    const decelDistance = (speed * decelDuration) / 3;
     
     let lastTickIndex = -1;
     
     function animateSpin(timestamp) {
         const elapsed = timestamp - startTimestamp;
-        const progress = Math.min(elapsed / spinDuration, 1);
         
-        // Cubic ease-out deceleration curve
-        const easeOut = 1 - Math.pow(1 - progress, 3);
-        
-        currentAngle = initialAngle + (finalAngle - initialAngle) * easeOut;
+        if (elapsed < constDuration) {
+            // Stage 1: Constant velocity cruise
+            currentAngle = initialAngle + speed * elapsed;
+        } else if (elapsed < spinDuration) {
+            // Stage 2: Smooth derivative-matched ease-out
+            const progressDecel = (elapsed - constDuration) / decelDuration;
+            const easeOut = 1 - Math.pow(1 - progressDecel, 3);
+            currentAngle = (initialAngle + speed * constDuration) + decelDistance * easeOut;
+        } else {
+            // Finished
+            currentAngle = (initialAngle + speed * constDuration) + decelDistance;
+        }
         
         // Trigger pointer tic audio
         const relativeAngle = (1.5 * Math.PI - currentAngle) % (2 * Math.PI);
@@ -360,12 +379,13 @@ function spinWheel() {
         
         drawWheel();
         
-        if (progress < 1) {
+        if (elapsed < spinDuration) {
             requestAnimationFrame(animateSpin);
         } else {
             // Spin Finished
             isSpinning = false;
             spinBtn.disabled = false;
+            if (durationSelect) durationSelect.disabled = false;
             
             // Compute resulting segment index
             const resultingIndex = currentTickIndex;
