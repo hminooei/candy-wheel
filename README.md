@@ -2,6 +2,8 @@
 
 A premium, interactive web application to select a candy from your daily stock, track what you've eaten, and filter out consumed treats. Perfect for portion control or just adding some playfulness to your daily sweet treats!
 
+![Candy Wheel Preview](screenshot.png)
+
 ## ✨ Features
 
 *   **Interactive Wheel**: High-DPI canvas-rendered wheel with vibrant colors, text along segments, and smooth physics decelaration.
