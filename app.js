@@ -1,3 +1,13 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { firebaseConfig } from "./config.js";
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
 // Initial Candies Database
 const INITIAL_CANDIES = [
     { id: 'haribo-wild-berry', name: 'Haribo Wild Berry', color: '#ec4899', status: 'remaining' }, // Premium Pink
@@ -13,6 +23,8 @@ let state = {
     dailyCandy: null, // Stores the candy object chosen for today, if not yet acknowledged
     lastSpinDate: null // To potentially restrict spins to once per calendar day
 };
+
+let currentUser = null;
 
 // Animation & Interaction Variables
 let currentAngle = 0;
@@ -51,9 +63,19 @@ function loadState() {
     }
 }
 
-// Save State to LocalStorage
-function saveState() {
+// Save State to LocalStorage (with Firestore sync fallback)
+async function saveState() {
     localStorage.setItem('candy_wheel_state', JSON.stringify(state));
+    if (currentUser) {
+        try {
+            await setDoc(doc(db, "users", currentUser.uid), {
+                state: state,
+                updatedAt: new Date().toISOString()
+            });
+        } catch (e) {
+            console.error("Failed to sync state with Firestore:", e);
+        }
+    }
 }
 
 // Reset/Refill candies
@@ -647,4 +669,163 @@ window.addEventListener('DOMContentLoaded', () => {
     setupCanvasScale();
     setupAddCandyForm();
     updateUI();
+    setupAuthListeners();
 });
+
+// ==========================================
+// AUTHENTICATION LOGIC & FIRESTORE SYNC
+// ==========================================
+
+// Auth DOM Elements
+const authModal = document.getElementById('auth-modal');
+const showLoginBtn = document.getElementById('show-login-btn');
+const closeAuthBtn = document.getElementById('close-auth-btn');
+const authForm = document.getElementById('auth-form');
+const authEmail = document.getElementById('auth-email');
+const authPassword = document.getElementById('auth-password');
+const authError = document.getElementById('auth-error');
+const authSubmitBtn = document.getElementById('auth-submit-btn');
+const authToggleBtn = document.getElementById('auth-toggle-btn');
+const authToggleText = document.getElementById('auth-toggle-text');
+const authModalTitle = document.getElementById('auth-modal-title');
+const authModalSubtitle = document.getElementById('auth-modal-subtitle');
+const signoutBtn = document.getElementById('signout-btn');
+const userEmailDisplay = document.getElementById('user-email');
+const authLoggedOutBar = document.getElementById('auth-logged-out');
+const authLoggedInBar = document.getElementById('auth-logged-in');
+
+let authMode = 'signin'; // 'signin' or 'signup'
+
+function openAuthModal() {
+    authModal.classList.remove('hidden');
+    authEmail.value = '';
+    authPassword.value = '';
+    authError.classList.add('hidden');
+    authError.textContent = '';
+    setAuthMode('signin');
+}
+
+function closeAuthModal() {
+    authModal.classList.add('hidden');
+}
+
+function setAuthMode(mode) {
+    authMode = mode;
+    if (mode === 'signin') {
+        authModalTitle.textContent = 'Sign In';
+        authModalSubtitle.textContent = 'Save your candy stock across devices';
+        authSubmitBtn.textContent = 'Sign In';
+        authToggleText.textContent = "Don't have an account?";
+        authToggleBtn.textContent = 'Sign Up';
+    } else {
+        authModalTitle.textContent = 'Create Account';
+        authModalSubtitle.textContent = 'Start syncing your candy wheel';
+        authSubmitBtn.textContent = 'Sign Up';
+        authToggleText.textContent = 'Already have an account?';
+        authToggleBtn.textContent = 'Sign In';
+    }
+}
+
+async function loadStateFromFirestore(user) {
+    try {
+        const docRef = doc(db, "users", user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+            const dbData = docSnap.data();
+            if (dbData && dbData.state) {
+                state = dbData.state;
+                localStorage.setItem('candy_wheel_state', JSON.stringify(state));
+                updateUI();
+            }
+        } else {
+            // First time login - save existing local state to Firestore
+            await saveState();
+        }
+    } catch (e) {
+        console.error("Failed to load state from Firestore:", e);
+    }
+}
+
+function setupAuthListeners() {
+    // Open/Close modal
+    showLoginBtn.addEventListener('click', openAuthModal);
+    closeAuthBtn.addEventListener('click', closeAuthModal);
+    
+    // Toggle sign-in / sign-up mode
+    authToggleBtn.addEventListener('click', () => {
+        setAuthMode(authMode === 'signin' ? 'signup' : 'signin');
+    });
+    
+    // Close modal when clicking outside content
+    window.addEventListener('click', (e) => {
+        if (e.target === authModal) {
+            closeAuthModal();
+        }
+    });
+
+    // Form Submission
+    authForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const email = authEmail.value.trim();
+        const password = authPassword.value;
+        
+        authError.classList.add('hidden');
+        authSubmitBtn.disabled = true;
+        const originalText = authSubmitBtn.textContent;
+        authSubmitBtn.textContent = authMode === 'signin' ? 'Signing In...' : 'Creating Account...';
+        
+        try {
+            if (authMode === 'signin') {
+                await signInWithEmailAndPassword(auth, email, password);
+            } else {
+                await createUserWithEmailAndPassword(auth, email, password);
+            }
+            closeAuthModal();
+        } catch (err) {
+            console.error("Auth error:", err);
+            authError.classList.remove('hidden');
+            
+            let message = err.message;
+            if (err.code === 'auth/invalid-credential') {
+                message = 'Invalid email or password.';
+            } else if (err.code === 'auth/email-already-in-use') {
+                message = 'This email is already registered.';
+            } else if (err.code === 'auth/weak-password') {
+                message = 'Password should be at least 6 characters.';
+            } else if (err.code === 'auth/invalid-email') {
+                message = 'Please enter a valid email address.';
+            }
+            authError.textContent = message;
+        } finally {
+            authSubmitBtn.disabled = false;
+            authSubmitBtn.textContent = originalText;
+        }
+    });
+
+    // Sign out button
+    signoutBtn.addEventListener('click', async () => {
+        try {
+            await signOut(auth);
+        } catch (e) {
+            console.error("Failed to sign out:", e);
+        }
+    });
+
+    // Monitor auth state changes
+    onAuthStateChanged(auth, async (user) => {
+        if (user) {
+            currentUser = user;
+            userEmailDisplay.textContent = user.email;
+            authLoggedOutBar.classList.add('hidden');
+            authLoggedInBar.classList.remove('hidden');
+            await loadStateFromFirestore(user);
+        } else {
+            currentUser = null;
+            userEmailDisplay.textContent = '';
+            authLoggedInBar.classList.add('hidden');
+            authLoggedOutBar.classList.remove('hidden');
+            loadState();
+            updateUI();
+        }
+    });
+}

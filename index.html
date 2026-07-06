@@ -19,6 +19,20 @@
     </div>
 
     <main class="app-container">
+        <!-- Auth Bar -->
+        <div class="auth-bar-wrapper">
+            <div id="auth-logged-out" class="auth-bar-card">
+                <span class="status-dot offline"></span>
+                <span class="auth-text">Playing locally (data not synced)</span>
+                <button id="show-login-btn" class="btn-action">🔑 Sign In</button>
+            </div>
+            <div id="auth-logged-in" class="auth-bar-card hidden">
+                <span class="status-dot online"></span>
+                <span class="auth-text">Logged in as <strong id="user-email"></strong></span>
+                <button id="signout-btn" class="btn-action">🚪 Sign Out</button>
+            </div>
+        </div>
+
         <header class="app-header">
             <div class="logo-wrapper">
                 <span class="logo-icon">🍭</span>
@@ -116,6 +130,31 @@
         <p>Candy Wheel &copy; 2026. Made with sweet vibes.</p>
     </footer>
 
-    <script src="app.js?v=1.0.2"></script>
+    <!-- Auth Modal Dialog -->
+    <div id="auth-modal" class="modal-overlay hidden">
+        <div class="modal-content card">
+            <button id="close-auth-btn" class="modal-close">&times;</button>
+            <h3 id="auth-modal-title">Sign In</h3>
+            <p id="auth-modal-subtitle" class="auth-modal-subtitle">Save your candy stock across devices</p>
+            
+            <form id="auth-form">
+                <div class="form-group">
+                    <input type="email" id="auth-email" placeholder="Email Address" required autocomplete="email" />
+                </div>
+                <div class="form-group">
+                    <input type="password" id="auth-password" placeholder="Password" required autocomplete="current-password" />
+                </div>
+                <div id="auth-error" class="error-text hidden"></div>
+                <button type="submit" id="auth-submit-btn" class="btn btn-primary">Sign In</button>
+            </form>
+            
+            <div class="auth-toggle-wrapper">
+                <span id="auth-toggle-text">Don't have an account?</span>
+                <button id="auth-toggle-btn" class="link-btn">Sign Up</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="app.js?v=1.0.2"></script>
 </body>
 </html>
